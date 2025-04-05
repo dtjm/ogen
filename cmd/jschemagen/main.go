@@ -11,10 +11,10 @@ import (
 	"github.com/go-faster/errors"
 	"github.com/go-faster/yaml"
 
+	"github.com/dtjm/ogen/internal/ogenzap"
+	"github.com/dtjm/ogen/internal/urlpath"
 	"github.com/ogen-go/ogen/gen"
 	"github.com/ogen-go/ogen/gen/genfs"
-	"github.com/ogen-go/ogen/internal/ogenzap"
-	"github.com/ogen-go/ogen/internal/urlpath"
 	"github.com/ogen-go/ogen/jsonpointer"
 	"github.com/ogen-go/ogen/jsonschema"
 )

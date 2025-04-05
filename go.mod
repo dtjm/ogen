@@ -1,8 +1,10 @@
-module github.com/ogen-go/ogen
+module github.com/dtjm/ogen
 
 go 1.23.0
 
 toolchain go1.23.7
+
+replace github.com/ogen-go/ogen v1.10.1 => github.com/dtjm/ogen v1.10.1
 
 require (
 	github.com/davecgh/go-spew v1.1.1
@@ -14,6 +16,7 @@ require (
 	github.com/go-faster/yaml v0.4.6
 	github.com/google/uuid v1.6.0
 	github.com/mattn/go-isatty v0.0.20
+	github.com/ogen-go/ogen v1.10.1
 	github.com/stretchr/testify v1.10.0
 	github.com/valyala/fasthttp v1.59.0
 	go.opentelemetry.io/otel v1.35.0
