@@ -44,6 +44,24 @@ var operationRoles{{ $s.Type.Name }} = map[string][]string {
 {{- end }}
 }
 
+{{if $s.Format.IsOAuth2Security}}
+var oauth2DisjointScopes{{ $s.Type.Name }} = map[string][][]string {
+{{- else}}
+var operationDisjointRoles{{ $s.Type.Name }} = map[string][][]string {
+{{- end}}
+{{- range $operationName, $scopeSets := $s.DisjointScopes }}
+	{{ $operationName }}Operation: [][]string{
+		{{- range $scopeSet := $scopeSets }}
+		{
+			{{- range $scope := $scopeSet }}
+			{{ quote $scope }},
+			{{- end}}
+		},
+		{{- end}}
+	},
+{{- end }}
+}
+
 func (s *Server) security{{ $s.Type.Name }}(ctx context.Context, operationName OperationName, req *http.Request, roles []string) (context.Context, bool, error) {
 	{{- if $s.Format.IsAPIKeySecurity }}
 		var t {{ $s.Type.Name }}

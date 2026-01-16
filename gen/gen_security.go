@@ -25,6 +25,9 @@ func (g *Generator) generateSecurityAPIKey(
 	s.Scopes = map[string][]string{
 		operationName: spec.Scopes,
 	}
+	s.DisjointScopes = map[string][][]string{
+		operationName: {spec.Scopes},
+	}
 
 	s.Type.Fields = append(s.Type.Fields,
 		&ir.Field{
@@ -65,6 +68,9 @@ func (g *Generator) generateSecurityOauth2(
 	s.Scopes = map[string][]string{
 		operationName: spec.Scopes,
 	}
+	s.DisjointScopes = map[string][][]string{
+		operationName: {spec.Scopes},
+	}
 
 	s.Type.Fields = append(s.Type.Fields,
 		&ir.Field{
@@ -88,6 +94,9 @@ func (g *Generator) generateSecurityHTTP(
 	s.Kind = ir.HeaderSecurity
 	s.Scopes = map[string][]string{
 		operationName: spec.Scopes,
+	}
+	s.DisjointScopes = map[string][][]string{
+		operationName: {spec.Scopes},
 	}
 
 	switch scheme := strings.ToLower(security.Scheme); scheme {
@@ -135,6 +144,9 @@ func (g *Generator) generateCustomSecurity(
 	s.Scopes = map[string][]string{
 		operationName: spec.Scopes,
 	}
+	s.DisjointScopes = map[string][][]string{
+		operationName: {spec.Scopes},
+	}
 
 	s.Type.Fields = append(s.Type.Fields,
 		&ir.Field{
@@ -155,7 +167,10 @@ func (g *Generator) generateCustomSecurity(
 
 func (g *Generator) generateSecurity(ctx *genctx, operationName string, spec openapi.SecurityScheme) (r *ir.Security, rErr error) {
 	if sec, ok := g.securities[spec.Name]; ok {
+		// Backward-compatible: append all scopes together
 		sec.Scopes[operationName] = append(sec.Scopes[operationName], spec.Scopes...)
+		// New: keep scopes separate as alternatives
+		sec.DisjointScopes[operationName] = append(sec.DisjointScopes[operationName], spec.Scopes)
 		return sec, nil
 	}
 	security := spec.Security

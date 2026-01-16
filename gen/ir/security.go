@@ -98,7 +98,16 @@ type Security struct {
 	ParameterName string
 	Description   string
 	Type          *Type
-	Scopes        map[string][]string
+	// Scopes maps operation name to all scopes combined from all security requirements.
+	// This field maintains backward compatibility.
+	// Deprecated: Use DisjointScopes for more precise scope handling.
+	Scopes map[string][]string
+	// DisjointScopes maps operation name to a slice of scope sets,
+	// where each scope set represents a disjoint alternative from the security requirements.
+	// For example, if a security scheme appears with ["read"] in one requirement and
+	// ["write"] in another requirement, this will be [["read"], ["write"]] instead of ["read", "write"].
+	// (written by Claude, verified by $HUMAN)
+	DisjointScopes map[string][][]string
 }
 
 func (s *Security) GoDoc() []string {
