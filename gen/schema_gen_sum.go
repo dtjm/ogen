@@ -1208,7 +1208,7 @@ func (g *schemaGen) allOf(name string, schema *jsonschema.Schema) (*ir.Type, err
 	}
 
 	// If there is only one schema in allOf, avoid merging to keep the reference.
-	if len(schema.AllOf) == 1 {
+	if len(schema.AllOf) == 1 && len(schema.Properties) == 0 && schema.UnevaluatedProperties == nil {
 		s := schema.AllOf[0]
 		if s != nil {
 			return g.generate(name, s, false)
@@ -1218,6 +1218,16 @@ func (g *schemaGen) allOf(name string, schema *jsonschema.Schema) (*ir.Type, err
 	mergedSchema, err := mergeNSchemes(schema.AllOf)
 	if err != nil {
 		return nil, err
+	}
+
+	// Merge parent schema's own properties and unevaluatedProperties into the result.
+	if len(schema.Properties) > 0 || schema.UnevaluatedProperties != nil {
+		parent := shallowSchemaCopy(schema)
+		parent.AllOf = nil
+		mergedSchema, err = mergeSchemes(mergedSchema, parent)
+		if err != nil {
+			return nil, errors.Wrap(err, "merge parent schema with allOf")
+		}
 	}
 
 	// The reference field must not change
@@ -1377,6 +1387,7 @@ func mergeSchemes(s1, s2 *jsonschema.Schema) (_ *jsonschema.Schema, err error) {
 		}
 		if s.Item != nil ||
 			s.AdditionalProperties != nil ||
+			s.UnevaluatedProperties != nil ||
 			len(s.PatternProperties) > 0 ||
 			len(s.Properties) > 0 ||
 			len(s.Required) > 0 {
@@ -1587,6 +1598,28 @@ func mergeSchemes(s1, s2 *jsonschema.Schema) (_ *jsonschema.Schema, err error) {
 			}
 		case s1.AdditionalProperties != nil && s2.AdditionalProperties != nil:
 			return nil, &ErrNotImplemented{Name: "allOf additionalProperties merging"}
+		}
+
+		switch {
+		case s1.UnevaluatedProperties == nil && s2.UnevaluatedProperties == nil:
+			// Nothing to do.
+		case s1.UnevaluatedProperties != nil && s2.UnevaluatedProperties == nil:
+			r.UnevaluatedProperties = s1.UnevaluatedProperties
+			r.UnevaluatedPropertiesSchema = s1.UnevaluatedPropertiesSchema
+		case s1.UnevaluatedProperties == nil && s2.UnevaluatedProperties != nil:
+			r.UnevaluatedProperties = s2.UnevaluatedProperties
+			r.UnevaluatedPropertiesSchema = s2.UnevaluatedPropertiesSchema
+		default:
+			// Both set: use the more restrictive (false wins over true).
+			v := *s1.UnevaluatedProperties && *s2.UnevaluatedProperties
+			r.UnevaluatedProperties = &v
+			if s1.UnevaluatedPropertiesSchema != nil || s2.UnevaluatedPropertiesSchema != nil {
+				merged, mergeErr := mergeSchemes(s1.UnevaluatedPropertiesSchema, s2.UnevaluatedPropertiesSchema)
+				if mergeErr != nil {
+					return nil, errors.Wrap(mergeErr, "merge unevaluatedProperties schema")
+				}
+				r.UnevaluatedPropertiesSchema = merged
+			}
 		}
 
 		r.MinProperties = someU64(s1.MinProperties, s2.MinProperties, selectMaxU64)

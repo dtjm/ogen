@@ -61,6 +61,8 @@ type Schema struct {
 	Item                 *Schema           // Only for Array and Object with additional properties.
 	Items                []*Schema         // Only for Array
 	AdditionalProperties *bool             // Whether Object has additional properties.
+	UnevaluatedProperties       *bool     // Whether Object has unevaluated properties.
+	UnevaluatedPropertiesSchema *Schema   // Schema for unevaluated properties, if not just false.
 	PatternProperties    []PatternProperty // Only for Object.
 	Enum                 []any             // Only for Enum.
 	Const                any               // Only for Const.

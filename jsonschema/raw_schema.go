@@ -8,7 +8,8 @@ type RawSchema struct {
 	Type                 string                `json:"type,omitempty" yaml:"type,omitempty"`
 	Format               string                `json:"format,omitempty" yaml:"format,omitempty"`
 	Properties           RawProperties         `json:"properties,omitempty" yaml:"properties,omitempty"`
-	AdditionalProperties *AdditionalProperties `json:"additionalProperties,omitempty" yaml:"additionalProperties,omitempty"`
+	AdditionalProperties   *AdditionalProperties `json:"additionalProperties,omitempty" yaml:"additionalProperties,omitempty"`
+	UnevaluatedProperties *AdditionalProperties `json:"unevaluatedProperties,omitempty" yaml:"unevaluatedProperties,omitempty"`
 	PatternProperties    RawPatternProperties  `json:"patternProperties,omitempty" yaml:"patternProperties,omitempty"`
 	Required             []string              `json:"required,omitempty" yaml:"required,omitempty"`
 	Items                *RawItems             `json:"items,omitempty" yaml:"items,omitempty"`

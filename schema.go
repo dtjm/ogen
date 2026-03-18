@@ -37,6 +37,11 @@ type Schema struct {
 	// and not a standard JSON Schema. Consistent with JSON Schema, additionalProperties defaults to true.
 	AdditionalProperties *AdditionalProperties `json:"additionalProperties,omitempty" yaml:"additionalProperties,omitempty"`
 
+	// Value can be boolean or object. Controls validation of properties not covered by
+	// properties, patternProperties, or composition keywords.
+	// Unlike additionalProperties, it "sees through" allOf composition.
+	UnevaluatedProperties *AdditionalProperties `json:"unevaluatedProperties,omitempty" yaml:"unevaluatedProperties,omitempty"`
+
 	// The value of "patternProperties" MUST be an object. Each property
 	// name of this object SHOULD be a valid regular expression, according
 	// to the ECMA-262 regular expression dialect. Each property value of

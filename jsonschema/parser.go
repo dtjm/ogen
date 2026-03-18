@@ -382,7 +382,7 @@ func (p *Parser) parseSchema(schema *RawSchema, ctx *jsonpointer.ResolveCtx, hoo
 				"type", "enum", "const", "nullable", "format", "default",
 				"oneOf", "anyOf", "allOf", "discriminator",
 				"description", "example", "examples", "deprecated",
-				"additionalProperties", "xml",
+				"additionalProperties", "unevaluatedProperties", "xml",
 			} {
 				fset[f] = struct{}{}
 			}
@@ -484,6 +484,27 @@ func (p *Parser) parseSchema(schema *RawSchema, ctx *jsonpointer.ResolveCtx, hoo
 				}
 			}
 			s.AdditionalProperties = &additional
+		}
+
+		if up := schema.UnevaluatedProperties; up != nil {
+			if schema.AdditionalProperties != nil {
+				ptr := schema.Common.Pointer(p.file(ctx))
+				me := new(location.MultiError)
+				me.ReportPtr(ptr.Field("unevaluatedProperties"), "both additionalProperties and unevaluatedProperties are set")
+				me.ReportPtr(ptr.Field("additionalProperties"), "")
+				return nil, me
+			}
+			var unevaluated bool
+			if val := up.Bool; val != nil {
+				unevaluated = *val
+			} else {
+				unevaluated = true
+				s.UnevaluatedPropertiesSchema, err = p.parse(&up.Schema, ctx)
+				if err != nil {
+					return nil, wrapField("unevaluatedProperties", err)
+				}
+			}
+			s.UnevaluatedProperties = &unevaluated
 		}
 
 		if pp := schema.PatternProperties; len(pp) > 0 {

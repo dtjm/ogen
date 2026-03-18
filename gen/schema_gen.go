@@ -259,6 +259,9 @@ func (g *schemaGen) generate2(name string, schema *jsonschema.Schema) (ret *ir.T
 	)
 	switch {
 	case len(schema.AnyOf) > 0:
+		if schema.UnevaluatedProperties != nil {
+			return nil, &ErrNotImplemented{Name: "unevaluatedProperties with anyOf"}
+		}
 		side := schema.Type == jsonschema.Object
 		sumName := name
 		if side {
@@ -283,6 +286,9 @@ func (g *schemaGen) generate2(name string, schema *jsonschema.Schema) (ret *ir.T
 		}
 		return t, nil
 	case len(schema.OneOf) > 0:
+		if schema.UnevaluatedProperties != nil {
+			return nil, &ErrNotImplemented{Name: "unevaluatedProperties with oneOf"}
+		}
 		side := schema.Type == jsonschema.Object
 		sumName := name
 		if side {
@@ -333,6 +339,17 @@ func (g *schemaGen) generate2(name string, schema *jsonschema.Schema) (ret *ir.T
 		if p := schema.AdditionalProperties; p != nil {
 			hasAdditionalProps = *p
 			denyAdditionalProps = !*p
+		}
+		// unevaluatedProperties: false acts like additionalProperties: false
+		// after allOf subschemas have been merged (all evaluated properties
+		// are already in schema.Properties at this point).
+		if up := schema.UnevaluatedProperties; up != nil && schema.AdditionalProperties == nil {
+			if !*up {
+				denyAdditionalProps = true
+			} else if schema.UnevaluatedPropertiesSchema != nil {
+				hasAdditionalProps = true
+				schema.Item = schema.UnevaluatedPropertiesSchema
+			}
 		}
 		hasPatternProps := len(schema.PatternProperties) > 0
 		isPatternSingle := len(schema.PatternProperties) == 1
